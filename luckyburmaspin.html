@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Burma Asia Lucky Spin</title>
+<style>
+  :root{
+    --bg:#0f1220; --card:#171a2b; --text:#e7e9f5; --muted:#9aa0b6; --accent:#35d0ff; --btn:#2a2f47; --btnText:#e7e9f5; --win:#00e08a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(1200px 900px at 70% -200px, #1b2050, #0b0e1e 55%), var(--bg);
+    color:var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans", Arial;
+  }
+  .wrap{width:min(100%,960px); padding:24px}
+  .card{
+    background:linear-gradient(180deg,#1b1f33, #121528);
+    border:1px solid #2a2f47; border-radius:20px; padding:22px; box-shadow: 0 10px 40px rgba(0,0,0,.35);
+  }
+  h1{
+    margin:0 0 6px; font-size: clamp(20px, 3.4vw, 34px); letter-spacing:.2px;
+    background: linear-gradient(90deg,#fff, #a5c9ff 50%, #7de9ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .sub{color:var(--muted); font-size:14px; margin-bottom:18px}
+  .flex{display:grid; grid-template-columns: 1fr; gap:20px}
+  @media (min-width:900px){ .flex{ grid-template-columns: 1fr 360px; } }
+
+  .stage{position:relative; display:grid; place-items:center; padding:10px}
+  canvas{ width:100%; max-width:520px; aspect-ratio:1/1; background: radial-gradient(120% 120% at 50% 45%, #242947, #161a33 60%); border-radius:50%; }
+  .pin{
+    position:absolute; top:-6px; width:min(12%,66px); aspect-ratio:1/1; display:grid; place-items:center;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,.5));
+  }
+  .pin svg{width:100%; height:100%}
+  .controls{display:flex; gap:10px; align-items:center; margin-top:12px}
+  button{
+    background: linear-gradient(180deg,var(--accent),#0fb1e6);
+    color:#001018; border:0; padding:12px 18px; font-weight:700; border-radius:12px; cursor:pointer; font-size:16px;
+    box-shadow: 0 8px 20px rgba(53,208,255,.35);
+  }
+  button[disabled]{filter:grayscale(1) brightness(.75); cursor:not-allowed; box-shadow:none}
+  .status{color:var(--muted); font-size:13px}
+  .prizes{
+    background:#12162d; border:1px solid #252a45; border-radius:14px; padding:14px;
+  }
+  .prizes h3{margin:0 0 8px; font-size:16px; color:#b9c2ff}
+  .prizes ul{margin:0; padding-left:18px; line-height:1.6}
+  .tag{display:inline-block; padding:2px 8px; border-radius:999px; background:#0e2230; color:#8fdfff; font-size:12px; border:1px solid #1e3946}
+
+  /* Modal */
+  .modal{position:fixed; inset:0; display:none; place-items:center; background: rgba(2,4,12,.55); backdrop-filter: blur(4px); z-index:50}
+  .modal.show{display:grid}
+  .sheet{width:min(92vw,520px); background:#101426; border:1px solid #283050; border-radius:16px; padding:18px}
+  .sheet h2{margin:0 0 8px; font-size:22px}
+  .code{font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; background:#0b0f20; border:1px dashed #2b355d; border-radius:10px; padding:10px; color:#8ff8c8; overflow:auto}
+  .ok{display:flex; justify-content:flex-end; margin-top:12px}
+  .ok button{background:linear-gradient(180deg,var(--win),#00b86e); color:#002a1d}
+  .tiny{font-size:12px; color:#93a0c7}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Burma Asia Lucky Spin</h1>
+      <div class="sub">တစ်ခါပဲ လှည့်နိုင်သော Lucky Spin — ထိပ်ဆုံးရာထူးကို သိမ်းလို့ရပါတယ်။</div>
+
+      <div class="flex">
+        <div>
+          <div class="stage">
+            <canvas id="wheel" width="600" height="600" aria-label="Lucky Wheel"></canvas>
+            <!-- pointer -->
+            <div class="pin" aria-hidden="true">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="46" fill="#0c1328" stroke="#2a3561" stroke-width="6"/>
+                <path d="M50 4 L62 34 A16 16 0 0 1 38 34 Z" fill="#ffcc00" />
+                <circle cx="50" cy="50" r="10" fill="#ffcc00"/>
+              </svg>
+            </div>
+          </div>
+          <div class="controls">
+            <button id="spinBtn">SPIN</button>
+            <div class="status" id="status">တစ်ခါပဲ လှည့်နိုင်ပါတယ် (One‑time).</div>
+          </div>
+        </div>
+
+        <div class="prizes">
+          <h3>🎁 Prizes <span class="tag">9 items</span></h3>
+          <ul id="prizeList"></ul>
+          <div class="tiny">မှတ်ချက်: “Spin 1 Time” ဟာ စာသားဆုသာဖြစ်ပြီး ဒီဗားရှင်းမှာ One‑time စည်းကမ်းအတိုင်း ထပ်လှည့်ခွင့်မပေးပါ။</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+    <div class="sheet">
+      <h2 id="winTitle">🥳 Congratulations!</h2>
+      <p id="winText">You won …</p>
+      <div class="code" id="claimBox"></div>
+      <div class="ok"><button id="okBtn">OK</button></div>
+      <div class="tiny">နောက်တစ်ကြိမ် လှည့်ခွင့်မရှိပါ — One‑time အနိုင်ရလဒ်ကို LocalStorage ထဲ သိမ်းပြီးခွင့်ပိတ်ထားပါတယ်။</div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const CONFIG = {
+    storageKey: "BA_LUCKY_SPIN_DONE_v1",
+    title: "Burma Asia Lucky Spin",
+    // Prizes (equal weight). You can reorder or edit text here.
+    prizes: [
+      "Unit 5,000",
+      "Ph Bill 2,000",
+      "Unit 10,000",
+      "Ph Bill 1,000",
+      "Unit 50,000",
+      "Ph Bill 5,000",
+      "Spin 1 Time",
+      "Unit 3,000",
+      "Cash 5,000"
+    ],
+    claimPrefix: "BA", // claim code prefix
+    spinDurationMs: 6000, // animation duration
+    extraRotations: 6     // base full rotations before landing
+  };
+
+  const el = {
+    canvas: document.getElementById("wheel"),
+    btn: document.getElementById("spinBtn"),
+    status: document.getElementById("status"),
+    prizeList: document.getElementById("prizeList"),
+    modal: document.getElementById("resultModal"),
+    winText: document.getElementById("winText"),
+    claim: document.getElementById("claimBox"),
+    ok: document.getElementById("okBtn"),
+  };
+
+  // Populate visible prize list
+  CONFIG.prizes.forEach(p => {
+    const li = document.createElement("li");
+    li.textContent = p;
+    el.prizeList.appendChild(li);
+  });
+
+  const ctx = el.canvas.getContext("2d");
+  const W = el.canvas.width, H = el.canvas.height, R = Math.min(W,H)/2 - 14;
+  const cx = W/2, cy = H/2;
+  const N = CONFIG.prizes.length;
+  const seg = (Math.PI * 2) / N;
+
+  let angle = 0;     // current rotation (radians, clockwise)
+  let spinning = false;
+
+  function drawWheel(a){
+    ctx.clearRect(0,0,W,H);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(a);
+
+    for(let i=0;i<N;i++){
+      const start = i*seg;
+      const end = start + seg;
+
+      // segment fill color (nice distributed hues)
+      const hue = Math.round(360 * (i/N));
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.arc(0,0,R,start,end,false);
+      ctx.closePath();
+      ctx.fillStyle = `hsl(${hue} 70% 50%)`;
+      ctx.fill();
+
+      // segment border
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // text
+      ctx.save();
+      const mid = start + seg/2;
+      ctx.rotate(mid);
+      ctx.translate(R*0.72,0);
+      ctx.rotate(Math.PI/2); // upright text
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 18px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      // wrap simple
+      wrapText(ctx, CONFIG.prizes[i], 0, 0, R*0.45, 22);
+      ctx.restore();
+    }
+
+    // center cap
+    ctx.beginPath();
+    ctx.arc(0,0, R*0.2, 0, Math.PI*2);
+    ctx.fillStyle = "#0d1226";
+    ctx.fill();
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = "#2b3561";
+    ctx.stroke();
+
+    // inner glow ring
+    ctx.beginPath();
+    ctx.arc(0,0, R, 0, Math.PI*2);
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = "rgba(255,255,255,.12)";
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function wrapText(context, text, x, y, maxWidth, lineHeight){
+    const words = text.split(" ");
+    let line = "", lines=[];
+    for(let n=0;n<words.length;n++){
+      const test = line + (line ? " ":"") + words[n];
+      const metrics = context.measureText(test);
+      if(metrics.width > maxWidth && line){
+        lines.push(line);
+        line = words[n];
+      } else {
+        line = test;
+      }
+    }
+    lines.push(line);
+    const startY = y - (lines.length-1)*lineHeight/2;
+    lines.forEach((ln,i)=> context.fillText(ln, x, startY + i*lineHeight));
+  }
+
+  // One-time gate
+  function checkAlreadyPlayed(){
+    const data = localStorage.getItem(CONFIG.storageKey);
+    if(data){
+      const {prize, code} = JSON.parse(data);
+      el.btn.disabled = true;
+      el.status.textContent = `ပြီးသား ✔ — ရလဒ်: ${prize} (Code: ${code})`;
+      return true;
+    }
+    return false;
+  }
+
+  function openModal(prize, code){
+    el.winText.textContent = `You won: ${prize}`;
+    el.claim.textContent = `CLAIM CODE: ${code}`;
+    el.modal.classList.add("show");
+  }
+
+  el.ok.addEventListener("click", () => {
+    el.modal.classList.remove("show");
+  });
+
+  function genClaimCode(){
+    const d = new Date();
+    const y = String(d.getFullYear()).slice(-2);
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const day = String(d.getDate()).padStart(2,"0");
+    const rand = Math.random().toString(36).slice(2,8).toUpperCase();
+    return `${CONFIG.claimPrefix}-${y}${m}${day}-${rand}`;
+  }
+
+  function spin(){
+    if(spinning) return;
+    if(checkAlreadyPlayed()) return;
+
+    spinning = true; el.btn.disabled = true; el.status.textContent = "စက်က လှည့်နေပါတယ်…";
+
+    // Choose a random segment index to land on (fair)
+    const targetIndex = Math.floor(Math.random() * N);
+
+    // compute a target angle so that the center of targetIndex is at the top pointer (12 o'clock).
+    // Pointer is fixed at -90deg; we rotate the wheel clockwise by 'angle'.
+    const segDeg = 360 / N;
+    const targetCenterDeg = targetIndex * segDeg + segDeg/2; // segment center w.r.t. wheel's 0deg (to the right)
+    // To bring that center under the pointer (top, 90deg from the right), we want:
+    // (currentAngleDeg + ? ) + targetCenterDeg ≡ 90 (mod 360)  => ? = 90 - targetCenterDeg - currentAngleDeg
+    const currentDeg = angle * 180/Math.PI;
+    const base = 90 - targetCenterDeg - currentDeg;
+    const full = CONFIG.extraRotations * 360;
+    const targetDeg = currentDeg + full + base; // ensure many full rotations before landing
+    const targetRad = targetDeg * Math.PI/180;
+
+    // animate
+    const start = performance.now();
+    const from = angle;
+    const to = targetRad;
+
+    function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+    function frame(now){
+      const t = Math.min(1, (now - start) / CONFIG.spinDurationMs);
+      const eased = easeOutCubic(t);
+      angle = from + (to - from) * eased;
+      drawWheel(angle);
+      if(t < 1){
+        requestAnimationFrame(frame);
+      }else{
+        // Finished
+        spinning = false;
+        // lock one-time
+        const prize = CONFIG.prizes[targetIndex];
+        const code = genClaimCode();
+        localStorage.setItem(CONFIG.storageKey, JSON.stringify({prize, code, at: Date.now()}));
+        el.status.textContent = `လှည့်ပြီး ✔ — ရလဒ်: ${prize}`;
+        openModal(prize, code);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // Init
+  drawWheel(angle);
+  if(checkAlreadyPlayed()){ el.btn.disabled = true; }
+  el.btn.addEventListener("click", spin);
+})();
+</script>
+</body>
+</html>
